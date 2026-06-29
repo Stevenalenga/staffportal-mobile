@@ -99,7 +99,7 @@ export default function DashboardScreen() {
     : [];
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={["top", "left", "right"]}>
       {/* Header */}
       <View className="bg-emerald-700 px-5 pt-2 pb-6">
         <View className="flex-row items-center justify-between">

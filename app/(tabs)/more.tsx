@@ -73,7 +73,7 @@ export default function MoreScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={["top", "left", "right"]}>
       <View className="bg-white px-5 pt-4 pb-4 border-b border-gray-100">
         <Text className="text-xl font-bold text-gray-900">More</Text>
       </View>
@@ -124,8 +124,8 @@ export default function MoreScreen() {
           <MenuItem
             icon="cube-outline"
             label="Assets"
-            sub="View asset register"
-            onPress={() => {}}
+            sub="Register, assignments & maintenance"
+            onPress={() => router.push("/assets")}
           />
           <MenuItem
             icon="calendar-outline"

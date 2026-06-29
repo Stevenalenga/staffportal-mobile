@@ -8,6 +8,7 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
@@ -87,10 +88,13 @@ export default function LoginScreen() {
       >
         {/* Header */}
         <View className="bg-emerald-700 px-6 pt-16 pb-10 items-center">
-          <View className="w-16 h-16 rounded-2xl bg-white/20 items-center justify-center mb-4">
-            <Ionicons name="business" size={32} color="white" />
+          <View className="bg-white rounded-2xl px-5 py-3 mb-4 shadow-sm">
+            <Image
+              source={require("../../assets/logo.webp")}
+              style={{ width: 140, height: 42 }}
+              resizeMode="contain"
+            />
           </View>
-          <Text className="text-white text-2xl font-bold">Uthabiti Africa</Text>
           <Text className="text-emerald-100 text-sm mt-1">Staff Portal</Text>
         </View>
 

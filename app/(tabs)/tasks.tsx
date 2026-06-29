@@ -115,7 +115,7 @@ export default function TasksScreen() {
   const urgent = tasks.filter((t: Task) => t.priority === "URGENT").length;
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={["top", "left", "right"]}>
       <View className="bg-white px-5 pt-4 pb-4 border-b border-gray-100">
         <View className="flex-row items-center justify-between">
           <Text className="text-xl font-bold text-gray-900">My Tasks</Text>
