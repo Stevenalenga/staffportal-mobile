@@ -37,6 +37,9 @@ module.exports = {
       typedRoutes: true,
     },
     extra: {
+      eas: {
+        projectId: "b0f0ba91-57cc-4efe-8424-8b1986050d5f",
+      },
       // Surfaced via Constants.expoConfig.extra if needed,
       // but prefer process.env.EXPO_PUBLIC_API_URL directly.
       apiUrl: process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000",

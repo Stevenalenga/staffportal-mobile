@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import { formatRoleLabel, getInitials, getRoleColor } from "@/lib/utils";
 
@@ -119,7 +119,13 @@ export default function MoreScreen() {
             icon="folder-outline"
             label="Projects"
             sub="Browse active projects"
-            onPress={() => {}}
+            onPress={() => router.push("/projects" as Href)}
+          />
+          <MenuItem
+            icon="business-outline"
+            label="Departments"
+            sub="Organisation structure"
+            onPress={() => router.push("/departments" as Href)}
           />
           <MenuItem
             icon="cube-outline"

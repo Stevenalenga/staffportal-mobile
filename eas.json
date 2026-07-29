@@ -11,7 +11,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://192.168.100.7:3000"
+        "EXPO_PUBLIC_API_URL": "https://staff.uthabitiafrica.org"
       }
     },
     "production": {
@@ -19,7 +19,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://YOUR_PRODUCTION_API_URL"
+        "EXPO_PUBLIC_API_URL": "https://staff.uthabitiafrica.org"
       }
     }
   },

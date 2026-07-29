@@ -6,12 +6,13 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  ScrollView,
 } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
-import { staffApi, type ApiUser } from "@/lib/api";
+import { useMemo, useState } from "react";
+import { departmentsApi, staffApi, type ApiUser } from "@/lib/api";
 import { formatRoleLabel, getInitials, getRoleColor } from "@/lib/utils";
 
 function StaffCard({ item }: { item: ApiUser }) {
@@ -62,17 +63,35 @@ function StaffCard({ item }: { item: ApiUser }) {
 
 export default function StaffScreen() {
   const [search, setSearch] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState<string>("");
+
   const { data: staff = [], isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["staff"],
     queryFn: staffApi.list,
   });
 
-  const filtered = staff.filter(
-    (s) =>
-      s.name?.toLowerCase().includes(search.toLowerCase()) ||
-      s.email.toLowerCase().includes(search.toLowerCase()) ||
-      s.department?.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const { data: departments = [] } = useQuery({
+    queryKey: ["departments"],
+    queryFn: departmentsApi.list,
+  });
+
+  const filtered = useMemo(() => {
+    return staff.filter((s) => {
+      const matchesSearch =
+        s.name?.toLowerCase().includes(search.toLowerCase()) ||
+        s.email.toLowerCase().includes(search.toLowerCase()) ||
+        s.department?.name.toLowerCase().includes(search.toLowerCase());
+
+      if (!matchesSearch) return false;
+
+      if (!departmentFilter) return true;
+
+      return (
+        s.department?.id === departmentFilter ||
+        s.department?.name === departmentFilter
+      );
+    });
+  }, [staff, search, departmentFilter]);
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={["top", "left", "right"]}>
@@ -95,6 +114,56 @@ export default function StaffScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {departments.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="mt-3"
+            contentContainerStyle={{ gap: 8 }}
+          >
+            <TouchableOpacity
+              onPress={() => setDepartmentFilter("")}
+              className={`rounded-full px-3 py-1.5 border ${
+                !departmentFilter
+                  ? "border-emerald-600 bg-emerald-50"
+                  : "border-gray-200 bg-white"
+              }`}
+            >
+              <Text
+                className={`text-xs font-medium ${
+                  !departmentFilter ? "text-emerald-700" : "text-gray-600"
+                }`}
+              >
+                All
+              </Text>
+            </TouchableOpacity>
+            {departments.map((dept) => {
+              const active =
+                departmentFilter === dept.id ||
+                departmentFilter === dept.name;
+              return (
+                <TouchableOpacity
+                  key={dept.id}
+                  onPress={() => setDepartmentFilter(dept.id)}
+                  className={`rounded-full px-3 py-1.5 border ${
+                    active
+                      ? "border-emerald-600 bg-emerald-50"
+                      : "border-gray-200 bg-white"
+                  }`}
+                >
+                  <Text
+                    className={`text-xs font-medium ${
+                      active ? "text-emerald-700" : "text-gray-600"
+                    }`}
+                  >
+                    {dept.name}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        )}
       </View>
 
       {isLoading ? (
@@ -118,7 +187,9 @@ export default function StaffScreen() {
             <View className="items-center justify-center py-20">
               <Ionicons name="people-outline" size={48} color="#d1d5db" />
               <Text className="text-gray-400 mt-3 text-sm">
-                {search ? "No staff match your search" : "No staff members yet"}
+                {search || departmentFilter
+                  ? "No staff match your filters"
+                  : "No staff members yet"}
               </Text>
             </View>
           }

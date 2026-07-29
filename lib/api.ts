@@ -36,8 +36,170 @@ export type ApiUser = {
   image: string | null;
   role: string;
   employeeId: string | null;
-  department: { name: string } | null;
+  department: { id: string; name: string; code?: string } | null;
   position: { title: string } | null;
+};
+
+export type Department = {
+  id: string;
+  name: string;
+  code: string;
+  description: string | null;
+  head: { id: string; name: string | null; email: string } | null;
+  staff: {
+    id: string;
+    name: string | null;
+    email: string;
+    role: string;
+  }[];
+  _count: { staff: number; positions: number };
+};
+
+export type ExpenseListItem = {
+  id: string;
+  title: string;
+  amount: number;
+  currency: string;
+  status: string;
+  expenseDate: string;
+  claimType?: string;
+  projectName?: string | null;
+  user: { name: string | null };
+  category: { name: string };
+  _count?: { attachments: number };
+};
+
+export type ExpenseLineItem = {
+  id?: string;
+  specification: string;
+  quantity: number;
+  unitCost: number;
+  cost?: number;
+  itemDate?: string | null;
+  sortOrder?: number;
+};
+
+export type ExpenseAttachment = {
+  id: string;
+  kind: string;
+  fileName: string;
+  mimeType?: string | null;
+};
+
+export type ExpenseDetail = {
+  id: string;
+  title: string;
+  amount: number;
+  currency: string;
+  status: string;
+  expenseDate: string;
+  claimType?: string;
+  projectName?: string | null;
+  purpose?: string | null;
+  notes?: string | null;
+  rejectionReason?: string | null;
+  user: { id: string; name: string | null; email?: string };
+  category: { name: string };
+  lineItems?: ExpenseLineItem[];
+  attachments?: ExpenseAttachment[];
+};
+
+export type ExpenseWorkflowAction =
+  | "finance_approve"
+  | "ceo_approve"
+  | "reject"
+  | "disburse";
+
+export type PendingUpload = {
+  uri: string;
+  name: string;
+  mimeType: string;
+  kind: "IRF_FORM" | "RECEIPT" | "SUPPORTING";
+};
+
+export type CreateExpensePayload = {
+  claimType: "EXPENSE" | "REFUND";
+  projectName: string;
+  purpose: string;
+  expenseDate: string;
+  notes?: string;
+  lineItems: {
+    specification: string;
+    quantity: number;
+    unitCost: number;
+    itemDate?: string;
+  }[];
+};
+
+export type ProjectListItem = {
+  id: string;
+  name: string;
+  code: string;
+  description: string | null;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  funder: string | null;
+  updatedAt: string;
+  myRole: string | null;
+  unreadUpdates: number;
+  _count: { members: number; updates: number };
+  creator?: { name: string | null; email: string };
+};
+
+export type ProjectMember = {
+  id: string;
+  role: string;
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    role: string;
+  };
+};
+
+export type ProjectComment = {
+  id: string;
+  body: string;
+  kind: string;
+  createdAt: string;
+  author: { id: string; name: string | null; email: string };
+};
+
+export type ProjectUpdate = {
+  id: string;
+  title: string | null;
+  body: string;
+  createdAt: string;
+  author: { id: string; name: string | null; email: string };
+  attachments: unknown[];
+  comments: ProjectComment[];
+};
+
+export type ProjectDetail = {
+  id: string;
+  name: string;
+  code: string;
+  description: string | null;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  funder: string | null;
+  objectives: string | null;
+  isAdmin: boolean;
+  members: ProjectMember[];
+  updates: ProjectUpdate[];
+};
+
+export type CreateProjectPayload = {
+  name: string;
+  code: string;
+  description?: string;
+  status: "PLANNING" | "ACTIVE" | "ON_HOLD";
+  startDate?: string;
+  endDate?: string;
+  funder?: string;
+  objectives?: string;
 };
 
 export type DashboardStats = {
@@ -79,16 +241,99 @@ export const staffApi = {
   },
 };
 
+export const departmentsApi = {
+  list: async () => {
+    const res = await api.get<Department[]>("/departments");
+    return res.data;
+  },
+};
+
 export const expensesApi = {
   list: async () => {
-    const res = await api.get("/expenses");
+    const res = await api.get<ExpenseListItem[]>("/expenses");
+    return res.data;
+  },
+  get: async (id: string) => {
+    const res = await api.get<ExpenseDetail>(`/expenses/${id}`);
+    return res.data;
+  },
+  create: async (payload: CreateExpensePayload) => {
+    const res = await api.post<ExpenseDetail>("/expenses", payload);
+    return res.data;
+  },
+  submit: async (id: string) => {
+    const res = await api.post<ExpenseDetail>(`/expenses/${id}/submit`);
+    return res.data;
+  },
+  workflow: async (
+    id: string,
+    action: ExpenseWorkflowAction,
+    reason?: string
+  ) => {
+    const res = await api.patch<ExpenseDetail>(`/expenses/${id}/workflow`, {
+      action,
+      reason,
+    });
+    return res.data;
+  },
+  uploadAttachments: async (expenseId: string, files: PendingUpload[]) => {
+    const formData = new FormData();
+    for (const file of files) {
+      formData.append(
+        "files",
+        {
+          uri: file.uri,
+          name: file.name,
+          type: file.mimeType,
+        } as unknown as Blob
+      );
+      formData.append("kinds", file.kind);
+    }
+    const res = await api.post<ExpenseAttachment[]>(
+      `/expenses/${expenseId}/attachments`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 120000,
+      }
+    );
     return res.data;
   },
 };
 
 export const projectsApi = {
   list: async () => {
-    const res = await api.get("/projects");
+    const res = await api.get<ProjectListItem[]>("/projects");
+    return res.data;
+  },
+  get: async (id: string) => {
+    const res = await api.get<ProjectDetail>(`/projects/${id}`);
+    return res.data;
+  },
+  create: async (payload: CreateProjectPayload) => {
+    const res = await api.post<{ id: string }>("/projects", payload);
+    return res.data;
+  },
+  addMember: async (projectId: string, email: string) => {
+    const res = await api.post(`/projects/${projectId}/members`, { email });
+    return res.data;
+  },
+  postUpdate: async (
+    projectId: string,
+    payload: { title?: string; body: string }
+  ) => {
+    const res = await api.post(`/projects/${projectId}/updates`, payload);
+    return res.data;
+  },
+  addComment: async (
+    projectId: string,
+    updateId: string,
+    payload: { body: string; kind?: "COMMENT" | "SUGGESTION" }
+  ) => {
+    const res = await api.post(
+      `/projects/${projectId}/updates/${updateId}/comments`,
+      payload
+    );
     return res.data;
   },
 };

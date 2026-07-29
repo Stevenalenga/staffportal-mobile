@@ -92,3 +92,90 @@ export const MAINTENANCE_TYPE_LABELS: Record<string, string> = {
   INSPECTION: "Inspection",
   OTHER: "Other",
 };
+
+export type ExpenseWorkflowAction =
+  | "finance_approve"
+  | "ceo_approve"
+  | "reject"
+  | "disburse";
+
+export function getExpenseStatusStyle(status: string): {
+  label: string;
+  color: string;
+  bg: string;
+  stage: number;
+} {
+  const styles: Record<
+    string,
+    { label: string; color: string; bg: string; stage: number }
+  > = {
+    DRAFT: { label: "Draft", color: "#6b7280", bg: "#f3f4f6", stage: 0 },
+    SUBMITTED: {
+      label: "Pending Finance",
+      color: "#d97706",
+      bg: "#fffbeb",
+      stage: 1,
+    },
+    FINANCE_APPROVED: {
+      label: "Pending CEO",
+      color: "#2563eb",
+      bg: "#eff6ff",
+      stage: 2,
+    },
+    APPROVED: { label: "Approved", color: "#047857", bg: "#ecfdf5", stage: 3 },
+    DISBURSED: {
+      label: "Disbursed",
+      color: "#047857",
+      bg: "#ecfdf5",
+      stage: 4,
+    },
+    REJECTED: { label: "Rejected", color: "#dc2626", bg: "#fef2f2", stage: -1 },
+  };
+  return (
+    styles[status] ?? {
+      label: status,
+      color: "#6b7280",
+      bg: "#f3f4f6",
+      stage: 0,
+    }
+  );
+}
+
+export function canPerformExpenseAction(
+  role: string,
+  status: string,
+  action: ExpenseWorkflowAction
+): boolean {
+  const isFinance = role === "FINANCE" || role === "IT_ADMIN";
+  const isCeo = role === "CEO" || role === "IT_ADMIN";
+
+  switch (action) {
+    case "finance_approve":
+      return isFinance && status === "SUBMITTED";
+    case "ceo_approve":
+      return isCeo && status === "FINANCE_APPROVED";
+    case "reject":
+      if (status === "SUBMITTED") return isFinance;
+      if (status === "FINANCE_APPROVED") return isCeo;
+      return false;
+    case "disburse":
+      return isFinance && status === "APPROVED";
+    default:
+      return false;
+  }
+}
+
+export function getProjectStatusStyle(status: string): {
+  label: string;
+  color: string;
+  bg: string;
+} {
+  const styles: Record<string, { label: string; color: string; bg: string }> = {
+    PLANNING: { label: "Planning", color: "#2563eb", bg: "#eff6ff" },
+    ACTIVE: { label: "Active", color: "#047857", bg: "#ecfdf5" },
+    ON_HOLD: { label: "On Hold", color: "#d97706", bg: "#fffbeb" },
+    COMPLETED: { label: "Completed", color: "#6b7280", bg: "#f3f4f6" },
+    CANCELLED: { label: "Cancelled", color: "#dc2626", bg: "#fef2f2" },
+  };
+  return styles[status] ?? { label: status, color: "#6b7280", bg: "#f3f4f6" };
+}

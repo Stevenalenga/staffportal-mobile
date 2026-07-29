@@ -8,6 +8,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter, type Href } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import { dashboardApi } from "@/lib/api";
 
@@ -37,6 +38,7 @@ function StatCard({ label, value, sub, iconName, color, bg }: StatCardProps) {
 }
 
 export default function DashboardScreen() {
+  const router = useRouter();
   const { user } = useAuth();
   const firstName = user?.name?.split(" ")[0] ?? "there";
 
@@ -158,15 +160,42 @@ export default function DashboardScreen() {
             Quick Actions
           </Text>
           <View className="flex-row flex-wrap gap-y-2">
-            {[
-              { label: "New Expense", icon: "receipt-outline" as const, color: "#ea580c", bg: "#fff7ed" },
-              { label: "View Tasks", icon: "checkbox-outline" as const, color: "#047857", bg: "#ecfdf5" },
-              { label: "Staff List", icon: "people-outline" as const, color: "#2563eb", bg: "#eff6ff" },
-              { label: "Projects", icon: "folder-outline" as const, color: "#7c3aed", bg: "#f5f3ff" },
-            ].map((action) => (
+            {(
+              [
+                {
+                  label: "New Expense",
+                  icon: "receipt-outline" as const,
+                  color: "#ea580c",
+                  bg: "#fff7ed",
+                  href: "/expenses/new",
+                },
+                {
+                  label: "View Tasks",
+                  icon: "checkbox-outline" as const,
+                  color: "#047857",
+                  bg: "#ecfdf5",
+                  href: "/(tabs)/tasks",
+                },
+                {
+                  label: "Staff List",
+                  icon: "people-outline" as const,
+                  color: "#2563eb",
+                  bg: "#eff6ff",
+                  href: "/(tabs)/staff",
+                },
+                {
+                  label: "Projects",
+                  icon: "folder-outline" as const,
+                  color: "#7c3aed",
+                  bg: "#f5f3ff",
+                  href: "/projects",
+                },
+              ] as const
+            ).map((action) => (
               <TouchableOpacity
                 key={action.label}
                 className="w-1/2 px-1"
+                onPress={() => router.push(action.href as Href)}
               >
                 <View
                   className="rounded-xl p-3 flex-row items-center gap-3 border border-gray-100"
