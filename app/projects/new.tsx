@@ -12,21 +12,24 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, type Href } from "expo-router";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { projectsApi } from "@/lib/api";
+import {
+  EXPENSE_COMPANY_OPTIONS,
+  type ExpenseCompany,
+} from "@/lib/expense-companies";
+
+const companyValues = EXPENSE_COMPANY_OPTIONS.map((o) => o.value) as [
+  ExpenseCompany,
+  ...ExpenseCompany[],
+];
 
 const createProjectSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  code: z
-    .string()
-    .min(1, "Code is required")
-    .regex(
-      /^[A-Za-z0-9_-]+$/,
-      "Code may only contain letters, numbers, _ and -"
-    ),
+  company: z.enum(companyValues, { message: "Select a company" }),
   description: z.string().optional(),
   status: z.enum(["PLANNING", "ACTIVE", "ON_HOLD"]),
   startDate: z.string().optional(),
@@ -61,19 +64,29 @@ export default function NewProjectScreen() {
   const {
     control,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
-    resolver: zodResolver(createProjectSchema),
+    resolver: zodResolver(createProjectSchema) as Resolver<FormData>,
     defaultValues: {
       name: "",
-      code: "",
+      company: undefined as unknown as FormData["company"],
       description: "",
-      status: "PLANNING",
+      status: "ACTIVE",
       startDate: "",
       endDate: "",
       funder: "",
       objectives: "",
     },
+  });
+
+  const company = watch("company");
+
+  const { data: codePreview, isFetching: codeLoading } = useQuery({
+    queryKey: ["project-next-code", company],
+    queryFn: () => projectsApi.nextCode(company),
+    enabled: !!company,
   });
 
   const createMutation = useMutation({
@@ -83,18 +96,18 @@ export default function NewProjectScreen() {
       router.replace(`/projects/${project.id}` as Href);
     },
     onError: (err: unknown) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const e = err as any;
-      const message =
-        e?.response?.data?.error ?? e?.message ?? "Could not create project.";
-      Alert.alert("Create Failed", message);
+      const e = err as { response?: { data?: { error?: string } } };
+      Alert.alert(
+        "Create Failed",
+        e?.response?.data?.error ?? "Could not create project."
+      );
     },
   });
 
   const onSubmit = (data: FormData) => {
     createMutation.mutate({
       name: data.name.trim(),
-      code: data.code.trim().toUpperCase(),
+      company: data.company,
       description: data.description?.trim() || undefined,
       status: data.status,
       startDate: data.startDate?.trim() || undefined,
@@ -118,7 +131,7 @@ export default function NewProjectScreen() {
         <View className="flex-1">
           <Text className="text-xl font-bold text-gray-900">New Project</Text>
           <Text className="text-xs text-gray-500 mt-0.5">
-            Create a project and invite members
+            You will be the project admin
           </Text>
         </View>
       </View>
@@ -153,23 +166,49 @@ export default function NewProjectScreen() {
             </View>
 
             <View className="mb-4">
-              <FieldLabel>Code *</FieldLabel>
-              <Controller
-                control={control}
-                name="code"
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    className="border border-gray-200 rounded-xl px-3 h-11 text-sm text-gray-900 bg-gray-50 font-mono"
-                    placeholder="e.g. UTH-2026"
-                    placeholderTextColor="#9ca3af"
-                    autoCapitalize="characters"
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                  />
-                )}
-              />
-              <FieldError message={errors.code?.message} />
+              <FieldLabel>Company *</FieldLabel>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ gap: 8 }}
+              >
+                {EXPENSE_COMPANY_OPTIONS.map((opt) => {
+                  const active = company === opt.value;
+                  return (
+                    <TouchableOpacity
+                      key={opt.value}
+                      onPress={() =>
+                        setValue("company", opt.value, { shouldValidate: true })
+                      }
+                      className={`rounded-full px-3 py-2 border ${
+                        active
+                          ? "border-emerald-600 bg-emerald-50"
+                          : "border-gray-200 bg-white"
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-medium ${
+                          active ? "text-emerald-700" : "text-gray-600"
+                        }`}
+                      >
+                        {opt.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              <FieldError message={errors.company?.message} />
+            </View>
+
+            <View className="mb-4">
+              <FieldLabel>Project code</FieldLabel>
+              <View className="border border-gray-200 rounded-xl px-3 h-11 justify-center bg-gray-100">
+                <Text className="text-sm text-gray-600 font-mono">
+                  {codeLoading
+                    ? "Generating…"
+                    : codePreview ?? "Select a company to generate code"}
+                </Text>
+              </View>
             </View>
 
             <View className="mb-4">
@@ -315,12 +354,12 @@ export default function NewProjectScreen() {
             {busy ? (
               <ActivityIndicator color="white" />
             ) : (
-              <>
+              <View className="flex-row items-center gap-2">
                 <Ionicons name="checkmark" size={18} color="white" />
                 <Text className="text-white font-semibold text-base">
                   Create Project
                 </Text>
-              </>
+              </View>
             )}
           </TouchableOpacity>
         </ScrollView>

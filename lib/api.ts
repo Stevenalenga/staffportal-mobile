@@ -2,6 +2,12 @@ import axios from "axios";
 import * as SecureStore from "expo-secure-store";
 import { API_BASE_URL } from "./config";
 
+const portalApi = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15000,
+  headers: { "Content-Type": "application/json" },
+});
+
 export const api = axios.create({
   baseURL: `${API_BASE_URL}/api/mobile`,
   timeout: 15000,
@@ -193,13 +199,45 @@ export type ProjectDetail = {
 
 export type CreateProjectPayload = {
   name: string;
-  code: string;
+  company: string;
   description?: string;
   status: "PLANNING" | "ACTIVE" | "ON_HOLD";
   startDate?: string;
   endDate?: string;
   funder?: string;
   objectives?: string;
+};
+
+export type PersonalTask = {
+  id: string;
+  title: string;
+  description: string | null;
+  priority: string;
+  status: string;
+  startDate: string | null;
+  dueDate: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export type CreateTaskPayload = {
+  title: string;
+  description?: string;
+  priority?: "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+  startDate?: string;
+  dueDate?: string;
+};
+
+export type UpdateTaskPayload = Partial<CreateTaskPayload> & {
+  status?: "TODO" | "IN_PROGRESS" | "REVIEW" | "DONE" | "CANCELLED";
+};
+
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
 };
 
 export type DashboardStats = {
@@ -223,6 +261,17 @@ export const authApi = {
   },
   me: async () => {
     const res = await api.get<ApiUser>("/auth/me");
+    return res.data;
+  },
+  registerDomains: async () => {
+    const res = await api.get<{ domains: string[] }>("/auth/register-domains");
+    return res.data.domains;
+  },
+  register: async (payload: RegisterPayload) => {
+    const res = await portalApi.post<{ message: string }>(
+      "/api/auth/register",
+      payload
+    );
     return res.data;
   },
 };
@@ -314,6 +363,12 @@ export const projectsApi = {
     const res = await api.post<{ id: string }>("/projects", payload);
     return res.data;
   },
+  nextCode: async (company: string) => {
+    const res = await api.get<{ code: string }>(
+      `/projects/next-code?company=${encodeURIComponent(company)}`
+    );
+    return res.data.code;
+  },
   addMember: async (projectId: string, email: string) => {
     const res = await api.post(`/projects/${projectId}/members`, { email });
     return res.data;
@@ -339,9 +394,24 @@ export const projectsApi = {
 };
 
 export const tasksApi = {
-  list: async () => {
-    const res = await api.get("/tasks");
+  list: async (filter: "open" | "completed" | "all" = "open") => {
+    const res = await api.get<PersonalTask[]>(`/tasks?filter=${filter}`);
     return res.data;
+  },
+  get: async (id: string) => {
+    const res = await api.get<PersonalTask>(`/tasks/${id}`);
+    return res.data;
+  },
+  create: async (payload: CreateTaskPayload) => {
+    const res = await api.post<PersonalTask>("/tasks", payload);
+    return res.data;
+  },
+  update: async (id: string, payload: UpdateTaskPayload) => {
+    const res = await api.patch<PersonalTask>(`/tasks/${id}`, payload);
+    return res.data;
+  },
+  remove: async (id: string) => {
+    await api.delete(`/tasks/${id}`);
   },
 };
 

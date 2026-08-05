@@ -9,11 +9,12 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, type Href } from "expo-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller, useFieldArray, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,10 +22,19 @@ import * as ImagePicker from "expo-image-picker";
 import * as DocumentPicker from "expo-document-picker";
 import {
   expensesApi,
-  projectsApi,
   type PendingUpload,
 } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
+import {
+  EXPENSE_COMPANY_OPTIONS,
+  type ExpenseCompany,
+} from "@/lib/expense-companies";
 import { formatCurrency } from "@/lib/utils";
+
+const companyValues = EXPENSE_COMPANY_OPTIONS.map((o) => o.value) as [
+  ExpenseCompany,
+  ...ExpenseCompany[],
+];
 
 const lineItemSchema = z.object({
   itemDate: z.string().optional(),
@@ -38,7 +48,9 @@ const schema = z.object({
   expenseDate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD format"),
-  projectName: z.string().min(1, "Project is required"),
+  projectName: z.enum(companyValues, {
+    message: "Select a company / project",
+  }),
   purpose: z.string().min(1, "Purpose is required"),
   notes: z.string().optional(),
   lineItems: z.array(lineItemSchema).min(1, "Add at least one line item"),
@@ -62,19 +74,6 @@ export default function NewExpenseScreen() {
   const [submitting, setSubmitting] = useState<"draft" | "submit" | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const { data: projects = [] } = useQuery({
-    queryKey: ["projects"],
-    queryFn: projectsApi.list,
-  });
-
-  const projectSuggestions = useMemo(
-    () =>
-      projects
-        .filter((p) => p.status === "PLANNING" || p.status === "ACTIVE")
-        .map((p) => p.name),
-    [projects]
-  );
-
   const {
     control,
     handleSubmit,
@@ -86,7 +85,6 @@ export default function NewExpenseScreen() {
     defaultValues: {
       claimType: "EXPENSE",
       expenseDate: todayIso(),
-      projectName: "",
       purpose: "",
       notes: "",
       lineItems: [
@@ -101,6 +99,7 @@ export default function NewExpenseScreen() {
   });
 
   const claimType = watch("claimType");
+  const projectName = watch("projectName");
   const lineItems = watch("lineItems");
 
   const totalAmount = useMemo(
@@ -330,51 +329,57 @@ export default function NewExpenseScreen() {
             )}
           </View>
 
-          {/* Project */}
+          {/* Company / project */}
           <View className="mb-4">
             <Text className="text-xs font-medium text-gray-500 mb-1.5">
-              Project name *
+              Company / project *
             </Text>
-            <Controller
-              control={control}
-              name="projectName"
-              render={({ field: { onChange, onBlur, value } }) => (
-                <TextInput
-                  className="bg-white border border-gray-200 rounded-xl px-3 h-11 text-sm text-gray-900"
-                  placeholder="Enter or select a project"
-                  placeholderTextColor="#9ca3af"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                />
-              )}
-            />
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8 }}
+            >
+              {EXPENSE_COMPANY_OPTIONS.map((opt) => {
+                const active = projectName === opt.value;
+                return (
+                  <TouchableOpacity
+                    key={opt.value}
+                    onPress={() =>
+                      setValue("projectName", opt.value, { shouldValidate: true })
+                    }
+                    className={`rounded-full px-3 py-2 border ${
+                      active
+                        ? "border-emerald-600 bg-emerald-50"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    <Text
+                      className={`text-xs font-medium ${
+                        active ? "text-emerald-700" : "text-gray-600"
+                      }`}
+                    >
+                      {opt.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
             {errors.projectName && (
               <Text className="text-red-500 text-xs mt-1">
                 {errors.projectName.message}
               </Text>
             )}
-            {projectSuggestions.length > 0 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="mt-2"
-                contentContainerStyle={{ gap: 8 }}
-              >
-                {projectSuggestions.map((name) => (
-                  <TouchableOpacity
-                    key={name}
-                    onPress={() => setValue("projectName", name, { shouldValidate: true })}
-                    className="rounded-full px-3 py-1.5 border border-gray-200 bg-white"
-                  >
-                    <Text className="text-xs font-medium text-gray-700">
-                      {name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            )}
           </View>
+
+          <TouchableOpacity
+            onPress={() => Linking.openURL(`${API_BASE_URL}/forms/irf-form.pdf`)}
+            className="flex-row items-center gap-1.5 mb-4"
+          >
+            <Ionicons name="document-outline" size={14} color="#047857" />
+            <Text className="text-emerald-700 text-xs font-medium">
+              Download blank IRF form (PDF)
+            </Text>
+          </TouchableOpacity>
 
           {/* Purpose */}
           <View className="mb-4">
@@ -691,12 +696,12 @@ export default function NewExpenseScreen() {
               {submitting === "submit" ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <>
+                <View className="flex-row items-center gap-1.5">
                   <Ionicons name="send-outline" size={16} color="white" />
                   <Text className="text-white text-sm font-semibold">
                     Submit Claim
                   </Text>
-                </>
+                </View>
               )}
             </TouchableOpacity>
           </View>

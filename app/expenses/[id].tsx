@@ -644,12 +644,12 @@ export default function ExpenseDetailScreen() {
             {submitMutation.isPending ? (
               <ActivityIndicator color="white" />
             ) : (
-              <>
+              <View className="flex-row items-center gap-1.5">
                 <Ionicons name="send-outline" size={16} color="white" />
                 <Text className="text-white text-sm font-semibold">
                   Submit to Finance
                 </Text>
-              </>
+              </View>
             )}
           </TouchableOpacity>
         )}
@@ -676,12 +676,12 @@ export default function ExpenseDetailScreen() {
                   {busy ? (
                     <ActivityIndicator color="white" />
                   ) : (
-                    <>
+                    <View className="flex-row items-center gap-1.5">
                       <Ionicons name={a.icon} size={16} color="white" />
                       <Text className="text-white text-sm font-semibold">
                         {a.label}
                       </Text>
-                    </>
+                    </View>
                   )}
                 </TouchableOpacity>
               );

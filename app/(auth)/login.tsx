@@ -10,7 +10,7 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, type Href } from "expo-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -200,8 +200,20 @@ export default function LoginScreen() {
             )}
           </TouchableOpacity>
 
-          <Text className="text-center text-gray-400 text-xs mt-4">
-            For access, contact the IT Administrator
+          <TouchableOpacity
+            onPress={() => router.push("/(auth)/register" as Href)}
+            className="mt-4 items-center"
+          >
+            <Text className="text-sm text-gray-600">
+              New to the portal?{" "}
+              <Text className="text-emerald-700 font-medium">
+                Create an account
+              </Text>
+            </Text>
+          </TouchableOpacity>
+
+          <Text className="text-center text-gray-400 text-xs mt-3">
+            Need help? Contact the IT Administrator
           </Text>
         </View>
       </ScrollView>

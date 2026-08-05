@@ -442,12 +442,12 @@ export default function ProjectDetailScreen() {
                   {postUpdateMutation.isPending ? (
                     <ActivityIndicator size="small" color="white" />
                   ) : (
-                    <>
+                    <View className="flex-row items-center gap-1.5">
                       <Ionicons name="create-outline" size={16} color="white" />
                       <Text className="text-white text-sm font-medium">
                         Post Update
                       </Text>
-                    </>
+                    </View>
                   )}
                 </TouchableOpacity>
               </>
