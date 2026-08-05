@@ -42,8 +42,20 @@ export type ApiUser = {
   image: string | null;
   role: string;
   employeeId: string | null;
+  employmentStatus?: string;
   department: { id: string; name: string; code?: string } | null;
   position: { title: string } | null;
+};
+
+export type StaffRoleDetail = {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string;
+  employmentStatus: string;
+  employeeId: string | null;
+  departmentId: string | null;
+  department: { id: string; name: string; code: string } | null;
 };
 
 export type Department = {
@@ -286,6 +298,21 @@ export const dashboardApi = {
 export const staffApi = {
   list: async () => {
     const res = await api.get<ApiUser[]>("/staff");
+    return res.data;
+  },
+  get: async (id: string) => {
+    const res = await api.get<StaffRoleDetail>(`/staff/${id}`);
+    return res.data;
+  },
+  updateRole: async (
+    id: string,
+    payload: {
+      role: string;
+      departmentId?: string;
+      employmentStatus?: string;
+    }
+  ) => {
+    const res = await api.patch<StaffRoleDetail>(`/staff/${id}`, payload);
     return res.data;
   },
 };

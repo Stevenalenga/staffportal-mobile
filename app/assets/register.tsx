@@ -14,6 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { assetsApi, type Asset } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
+import { canManageAssets } from "@/lib/portal-access";
 import {
   formatAssetCategory,
   formatCurrency,
@@ -169,6 +171,8 @@ function AssetCard({ item }: { item: Asset }) {
 
 export default function AssetRegisterScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const manager = canManageAssets(user?.role);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -250,11 +254,15 @@ export default function AssetRegisterScreen() {
             <Ionicons name="arrow-back" size={18} color="#374151" />
           </TouchableOpacity>
           <View className="flex-1">
-            <Text className="text-xl font-bold text-gray-900">Asset Register</Text>
+            <Text className="text-xl font-bold text-gray-900">
+              {manager ? "Asset Register" : "My assigned assets"}
+            </Text>
             <Text className="text-xs text-gray-500 mt-0.5">
               {hasFilters
                 ? `${filtered.length} of ${assets.length} assets`
-                : `${assets.length} asset${assets.length !== 1 ? "s" : ""} in register`}
+                : manager
+                  ? `${assets.length} asset${assets.length !== 1 ? "s" : ""} in register`
+                  : `${assets.length} asset${assets.length !== 1 ? "s" : ""} assigned to you`}
             </Text>
           </View>
           {hasFilters && (

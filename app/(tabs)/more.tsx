@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter, type Href } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import { formatRoleLabel, getInitials, getRoleColor } from "@/lib/utils";
+import { canManageAssets, canViewStaffDirectory } from "@/lib/portal-access";
 
 type MenuItemProps = {
   icon: React.ComponentProps<typeof Ionicons>["name"];
@@ -57,6 +58,8 @@ export default function MoreScreen() {
   const router = useRouter();
   const initials = getInitials(user?.name ?? user?.email ?? "?");
   const roleColor = getRoleColor(user?.role ?? "STAFF");
+  const viewStaffDirectory = canViewStaffDirectory(user?.role);
+  const assetManager = canManageAssets(user?.role);
 
   const handleLogout = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -121,16 +124,22 @@ export default function MoreScreen() {
             sub="Browse active projects"
             onPress={() => router.push("/projects" as Href)}
           />
-          <MenuItem
-            icon="business-outline"
-            label="Departments"
-            sub="Organisation structure"
-            onPress={() => router.push("/departments" as Href)}
-          />
+          {viewStaffDirectory && (
+            <MenuItem
+              icon="business-outline"
+              label="Departments"
+              sub="Organisation structure"
+              onPress={() => router.push("/departments" as Href)}
+            />
+          )}
           <MenuItem
             icon="cube-outline"
             label="Assets"
-            sub="Register, assignments & maintenance"
+            sub={
+              assetManager
+                ? "Register, assignments & maintenance"
+                : "View assets assigned to you"
+            }
             onPress={() => router.push("/assets")}
           />
           <MenuItem

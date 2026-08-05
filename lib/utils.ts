@@ -29,6 +29,7 @@ export function formatRoleLabel(role: string): string {
     CEO: "CEO",
     OPERATIONS: "Operations",
     FINANCE: "Finance",
+    STAFF_ASSISTANT: "Staff Assistant",
     HUMAN_RESOURCES: "Human Resources",
     PROGRAMME_MANAGER: "Programme Manager",
     PROJECT_OFFICER: "Project Officer",

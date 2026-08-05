@@ -12,15 +12,29 @@ import { useQuery } from "@tanstack/react-query";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
+import { useRouter, type Href } from "expo-router";
 import { departmentsApi, staffApi, type ApiUser } from "@/lib/api";
 import { formatRoleLabel, getInitials, getRoleColor } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import {
+  canViewStaffDirectory,
+  isItAdmin,
+} from "@/lib/portal-access";
 
-function StaffCard({ item }: { item: ApiUser }) {
+function StaffCard({
+  item,
+  showRoleAction,
+  onPress,
+}: {
+  item: ApiUser;
+  showRoleAction: boolean;
+  onPress?: () => void;
+}) {
   const initials = getInitials(item.name ?? item.email);
   const roleColor = getRoleColor(item.role);
 
-  return (
-    <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100 flex-row items-center gap-3">
+  const content = (
+    <View className="flex-row items-center gap-3 flex-1">
       <View
         className="w-12 h-12 rounded-full items-center justify-center"
         style={{ backgroundColor: `${roleColor}20` }}
@@ -56,14 +70,42 @@ function StaffCard({ item }: { item: ApiUser }) {
             {item.department.name}
           </Text>
         )}
+        {showRoleAction && (
+          <Text className="text-[10px] text-emerald-700 text-right mt-1 font-medium">
+            Edit role
+          </Text>
+        )}
       </View>
+    </View>
+  );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.7}
+        className="bg-white rounded-2xl p-4 mb-3 border border-gray-100"
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
+      {content}
     </View>
   );
 }
 
 export default function StaffScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string>("");
+
+  const viewDirectory = canViewStaffDirectory(user?.role);
+  const itAdmin = isItAdmin(user?.role);
 
   const { data: staff = [], isLoading, refetch, isRefetching } = useQuery({
     queryKey: ["staff"],
@@ -73,6 +115,7 @@ export default function StaffScreen() {
   const { data: departments = [] } = useQuery({
     queryKey: ["departments"],
     queryFn: departmentsApi.list,
+    enabled: viewDirectory,
   });
 
   const filtered = useMemo(() => {
@@ -96,73 +139,84 @@ export default function StaffScreen() {
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={["top", "left", "right"]}>
       <View className="bg-white px-5 pt-4 pb-4 border-b border-gray-100">
-        <Text className="text-xl font-bold text-gray-900 mb-3">
-          Staff Directory
+        <Text className="text-xl font-bold text-gray-900 mb-1">
+          {viewDirectory ? "Staff Directory" : "My profile"}
         </Text>
-        <View className="flex-row items-center bg-gray-100 rounded-xl px-3 h-10">
-          <Ionicons name="search-outline" size={16} color="#9ca3af" />
-          <TextInput
-            className="flex-1 ml-2 text-gray-900 text-sm"
-            placeholder="Search staff..."
-            placeholderTextColor="#9ca3af"
-            value={search}
-            onChangeText={setSearch}
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch("")}>
-              <Ionicons name="close-circle" size={16} color="#9ca3af" />
-            </TouchableOpacity>
-          )}
-        </View>
+        {!viewDirectory && (
+          <Text className="text-xs text-gray-500 mb-3">
+            You can view your own staff record here. Contact HR or IT for directory
+            access.
+          </Text>
+        )}
 
-        {departments.length > 0 && (
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="mt-3"
-            contentContainerStyle={{ gap: 8 }}
-          >
-            <TouchableOpacity
-              onPress={() => setDepartmentFilter("")}
-              className={`rounded-full px-3 py-1.5 border ${
-                !departmentFilter
-                  ? "border-emerald-600 bg-emerald-50"
-                  : "border-gray-200 bg-white"
-              }`}
-            >
-              <Text
-                className={`text-xs font-medium ${
-                  !departmentFilter ? "text-emerald-700" : "text-gray-600"
-                }`}
+        {viewDirectory && (
+          <>
+            <View className="flex-row items-center bg-gray-100 rounded-xl px-3 h-10 mb-0">
+              <Ionicons name="search-outline" size={16} color="#9ca3af" />
+              <TextInput
+                className="flex-1 ml-2 text-gray-900 text-sm"
+                placeholder="Search staff..."
+                placeholderTextColor="#9ca3af"
+                value={search}
+                onChangeText={setSearch}
+              />
+              {search.length > 0 && (
+                <TouchableOpacity onPress={() => setSearch("")}>
+                  <Ionicons name="close-circle" size={16} color="#9ca3af" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {departments.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                className="mt-3"
+                contentContainerStyle={{ gap: 8 }}
               >
-                All
-              </Text>
-            </TouchableOpacity>
-            {departments.map((dept) => {
-              const active =
-                departmentFilter === dept.id ||
-                departmentFilter === dept.name;
-              return (
                 <TouchableOpacity
-                  key={dept.id}
-                  onPress={() => setDepartmentFilter(dept.id)}
+                  onPress={() => setDepartmentFilter("")}
                   className={`rounded-full px-3 py-1.5 border ${
-                    active
+                    !departmentFilter
                       ? "border-emerald-600 bg-emerald-50"
                       : "border-gray-200 bg-white"
                   }`}
                 >
                   <Text
                     className={`text-xs font-medium ${
-                      active ? "text-emerald-700" : "text-gray-600"
+                      !departmentFilter ? "text-emerald-700" : "text-gray-600"
                     }`}
                   >
-                    {dept.name}
+                    All
                   </Text>
                 </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
+                {departments.map((dept) => {
+                  const active =
+                    departmentFilter === dept.id ||
+                    departmentFilter === dept.name;
+                  return (
+                    <TouchableOpacity
+                      key={dept.id}
+                      onPress={() => setDepartmentFilter(dept.id)}
+                      className={`rounded-full px-3 py-1.5 border ${
+                        active
+                          ? "border-emerald-600 bg-emerald-50"
+                          : "border-gray-200 bg-white"
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-medium ${
+                          active ? "text-emerald-700" : "text-gray-600"
+                        }`}
+                      >
+                        {dept.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </>
         )}
       </View>
 
@@ -174,7 +228,17 @@ export default function StaffScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <StaffCard item={item} />}
+          renderItem={({ item }) => (
+            <StaffCard
+              item={item}
+              showRoleAction={itAdmin && item.id !== user?.id}
+              onPress={
+                itAdmin && item.id !== user?.id
+                  ? () => router.push(`/staff/${item.id}/role` as Href)
+                  : undefined
+              }
+            />
+          )}
           contentContainerStyle={{ padding: 16 }}
           refreshControl={
             <RefreshControl
@@ -187,16 +251,19 @@ export default function StaffScreen() {
             <View className="items-center justify-center py-20">
               <Ionicons name="people-outline" size={48} color="#d1d5db" />
               <Text className="text-gray-400 mt-3 text-sm">
-                {search || departmentFilter
+                {viewDirectory && (search || departmentFilter)
                   ? "No staff match your filters"
-                  : "No staff members yet"}
+                  : "No staff record found"}
               </Text>
             </View>
           }
           ListHeaderComponent={
-            <Text className="text-xs text-gray-400 mb-3">
-              {filtered.length} member{filtered.length !== 1 ? "s" : ""}
-            </Text>
+            viewDirectory ? (
+              <Text className="text-xs text-gray-400 mb-3">
+                {filtered.length} member{filtered.length !== 1 ? "s" : ""}
+                {itAdmin ? " · Tap a member to change role" : ""}
+              </Text>
+            ) : null
           }
         />
       )}
