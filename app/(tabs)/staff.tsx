@@ -16,10 +16,8 @@ import { useRouter, type Href } from "expo-router";
 import { departmentsApi, staffApi, type ApiUser } from "@/lib/api";
 import { formatRoleLabel, getInitials, getRoleColor } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import {
-  canViewStaffDirectory,
-  isItAdmin,
-} from "@/lib/portal-access";
+import { canViewStaffDirectory } from "@/lib/portal-access";
+import { isItAdmin } from "@/lib/staff-roles";
 
 function StaffCard({
   item,
@@ -72,7 +70,7 @@ function StaffCard({
         )}
         {showRoleAction && (
           <Text className="text-[10px] text-emerald-700 text-right mt-1 font-medium">
-            Edit role
+            Assign role
           </Text>
         )}
       </View>
@@ -261,7 +259,7 @@ export default function StaffScreen() {
             viewDirectory ? (
               <Text className="text-xs text-gray-400 mb-3">
                 {filtered.length} member{filtered.length !== 1 ? "s" : ""}
-                {itAdmin ? " · Tap a member to change role" : ""}
+                {itAdmin ? " · Tap a member to assign portal role" : ""}
               </Text>
             ) : null
           }

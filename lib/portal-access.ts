@@ -22,6 +22,4 @@ export function canManageAssets(role: string | undefined | null): boolean {
   );
 }
 
-export function isItAdmin(role: string | undefined | null): boolean {
-  return role === "IT_ADMIN";
-}
+export { isItAdmin } from "@/lib/staff-roles";

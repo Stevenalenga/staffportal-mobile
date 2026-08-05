@@ -42,9 +42,16 @@ export type ApiUser = {
   image: string | null;
   role: string;
   employeeId: string | null;
+  phone?: string | null;
+  secondaryPhone?: string | null;
   employmentStatus?: string;
   department: { id: string; name: string; code?: string } | null;
   position: { title: string } | null;
+};
+
+export type ProfileUser = ApiUser & {
+  phone: string | null;
+  secondaryPhone: string | null;
 };
 
 export type StaffRoleDetail = {
@@ -54,6 +61,21 @@ export type StaffRoleDetail = {
   role: string;
   employmentStatus: string;
   employeeId: string | null;
+  phone?: string | null;
+  secondaryPhone?: string | null;
+  departmentId: string | null;
+  department: { id: string; name: string; code: string } | null;
+};
+
+export type AdminUser = {
+  id: string;
+  name: string | null;
+  email: string;
+  role: string;
+  phone: string | null;
+  secondaryPhone: string | null;
+  employeeId: string | null;
+  employmentStatus: string;
   departmentId: string | null;
   department: { id: string; name: string; code: string } | null;
 };
@@ -288,6 +310,21 @@ export const authApi = {
   },
 };
 
+export const profileApi = {
+  get: async () => {
+    const res = await api.get<ProfileUser>("/profile");
+    return res.data;
+  },
+  update: async (payload: {
+    name: string;
+    phone?: string;
+    secondaryPhone?: string;
+  }) => {
+    const res = await api.patch<ProfileUser>("/profile", payload);
+    return res.data;
+  },
+};
+
 export const dashboardApi = {
   stats: async () => {
     const res = await api.get<DashboardStats>("/dashboard");
@@ -304,6 +341,21 @@ export const staffApi = {
     const res = await api.get<StaffRoleDetail>(`/staff/${id}`);
     return res.data;
   },
+  update: async (
+    id: string,
+    payload: {
+      name?: string;
+      phone?: string;
+      secondaryPhone?: string;
+      employeeId?: string;
+      role?: string;
+      departmentId?: string;
+      employmentStatus?: string;
+    }
+  ) => {
+    const res = await api.patch<StaffRoleDetail>(`/staff/${id}`, payload);
+    return res.data;
+  },
   updateRole: async (
     id: string,
     payload: {
@@ -315,11 +367,99 @@ export const staffApi = {
     const res = await api.patch<StaffRoleDetail>(`/staff/${id}`, payload);
     return res.data;
   },
+  deactivate: async (id: string) => {
+    const res = await api.delete<{ ok: boolean; deactivated: boolean }>(
+      `/staff/${id}`
+    );
+    return res.data;
+  },
+};
+
+function mapStaffToAdminUser(u: ApiUser): AdminUser {
+  return {
+    id: u.id,
+    name: u.name,
+    email: u.email,
+    role: u.role,
+    phone: u.phone ?? null,
+    secondaryPhone: u.secondaryPhone ?? null,
+    employeeId: u.employeeId,
+    employmentStatus: u.employmentStatus ?? "ACTIVE",
+    departmentId: u.department?.id ?? null,
+    department: u.department
+      ? {
+          id: u.department.id,
+          name: u.department.name,
+          code: u.department.code ?? "",
+        }
+      : null,
+  };
+}
+
+function isRetryableAdminListError(error: unknown): boolean {
+  if (!axios.isAxiosError(error)) return false;
+  const status = error.response?.status;
+  return status === 404 || status === 502 || status === 503;
+}
+
+async function fetchAdminUsers(): Promise<AdminUser[]> {
+  const attempts: (() => Promise<AdminUser[]>)[] = [
+    async () => {
+      const res = await api.get<AdminUser[]>("/staff", { params: { admin: "1" } });
+      return res.data;
+    },
+    async () => {
+      const res = await api.get<AdminUser[]>("/admin/users");
+      return res.data;
+    },
+    async () => {
+      const res = await api.get<ApiUser[]>("/staff");
+      return res.data.map(mapStaffToAdminUser);
+    },
+  ];
+
+  let lastError: unknown;
+  for (const attempt of attempts) {
+    try {
+      return await attempt();
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableAdminListError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isAxiosError(error)) {
+    const msg = error.response?.data as { error?: string } | undefined;
+    if (msg?.error) return msg.error;
+    if (error.response?.status === 404) {
+      return "This feature requires an updated portal server. Redeploy the web app and try again.";
+    }
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}
+
+export const adminUsersApi = {
+  list: fetchAdminUsers,
 };
 
 export const departmentsApi = {
   list: async () => {
     const res = await api.get<Department[]>("/departments");
+    return res.data;
+  },
+  create: async (payload: {
+    name: string;
+    code: string;
+    description?: string;
+  }) => {
+    const res = await api.post<Department>("/departments", payload);
     return res.data;
   },
 };

@@ -15,7 +15,7 @@ import { departmentsApi, staffApi } from "@/lib/api";
 import { getRolesAssignableBy } from "@/lib/staff-roles";
 import { formatRoleLabel } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import { isItAdmin } from "@/lib/portal-access";
+import { isItAdmin } from "@/lib/staff-roles";
 
 const EMPLOYMENT_STATUSES = [
   "ACTIVE",
@@ -103,7 +103,7 @@ export default function StaffRoleScreen() {
           <Ionicons name="arrow-back" size={18} color="#374151" />
         </TouchableOpacity>
         <View className="flex-1">
-          <Text className="text-xl font-bold text-gray-900">Change role</Text>
+          <Text className="text-xl font-bold text-gray-900">Assign portal role</Text>
           <Text className="text-xs text-gray-500 mt-0.5" numberOfLines={1}>
             {staffMember.name ?? staffMember.email}
           </Text>

@@ -9,6 +9,7 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateStoredUser: (user: ApiUser) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -77,6 +78,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }
 
+  async function updateStoredUser(next: ApiUser) {
+    const userJson = JSON.stringify(next);
+    await SecureStore.setItemAsync("auth_user", userJson);
+    setUser(next);
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -86,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!token && !!user,
         login,
         logout,
+        updateStoredUser,
       }}
     >
       {children}

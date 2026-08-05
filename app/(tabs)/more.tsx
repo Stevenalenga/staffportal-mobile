@@ -12,6 +12,7 @@ import { useRouter, type Href } from "expo-router";
 import { useAuth } from "@/context/AuthContext";
 import { formatRoleLabel, getInitials, getRoleColor } from "@/lib/utils";
 import { canManageAssets, canViewStaffDirectory } from "@/lib/portal-access";
+import { canAccessSettingsAdminHub } from "@/lib/settings-access";
 
 type MenuItemProps = {
   icon: React.ComponentProps<typeof Ionicons>["name"];
@@ -60,6 +61,7 @@ export default function MoreScreen() {
   const roleColor = getRoleColor(user?.role ?? "STAFF");
   const viewStaffDirectory = canViewStaffDirectory(user?.role);
   const assetManager = canManageAssets(user?.role);
+  const settingsAdmin = canAccessSettingsAdminHub(user?.role);
 
   const handleLogout = () => {
     Alert.alert("Sign Out", "Are you sure you want to sign out?", [
@@ -116,7 +118,7 @@ export default function MoreScreen() {
             icon="person-outline"
             label="My Profile"
             sub="View and edit your profile"
-            onPress={() => {}}
+            onPress={() => router.push("/settings/account" as Href)}
           />
           <MenuItem
             icon="folder-outline"
@@ -160,8 +162,12 @@ export default function MoreScreen() {
           <MenuItem
             icon="settings-outline"
             label="Settings"
-            sub="App preferences"
-            onPress={() => {}}
+            sub={
+              settingsAdmin
+                ? "Account & portal administration"
+                : "App preferences"
+            }
+            onPress={() => router.push("/settings" as Href)}
           />
           <MenuItem
             icon="help-circle-outline"

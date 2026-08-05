@@ -47,6 +47,7 @@ export default function RootLayout() {
           <Stack.Screen name="departments" />
           <Stack.Screen name="tasks" />
           <Stack.Screen name="staff" />
+          <Stack.Screen name="settings" />
         </Stack>
       </AuthProvider>
     </QueryClientProvider>
