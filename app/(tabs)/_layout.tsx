@@ -28,7 +28,10 @@ export default function TabsLayout() {
 
   if (isLoading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View
+        className="flex-1 items-center justify-center bg-gray-50"
+        style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
+      >
         <ActivityIndicator size="large" color="#047857" />
       </View>
     );

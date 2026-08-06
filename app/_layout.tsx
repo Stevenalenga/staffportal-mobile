@@ -1,7 +1,12 @@
 import { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  SafeAreaProvider,
+  initialWindowMetrics,
+} from "react-native-safe-area-context";
 import {
   useFonts,
   Inter_400Regular,
@@ -35,21 +40,25 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="assets" />
-          <Stack.Screen name="expenses" />
-          <Stack.Screen name="projects" />
-          <Stack.Screen name="departments" />
-          <Stack.Screen name="tasks" />
-          <Stack.Screen name="staff" />
-          <Stack.Screen name="settings" />
-        </Stack>
-      </AuthProvider>
-    </QueryClientProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <View className="flex-1 bg-gray-50">
+            <StatusBar style="dark" />
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#f9fafb" } }}>
+              <Stack.Screen name="(auth)" />
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="assets" />
+              <Stack.Screen name="expenses" />
+              <Stack.Screen name="projects" />
+              <Stack.Screen name="departments" />
+              <Stack.Screen name="tasks" />
+              <Stack.Screen name="staff" />
+              <Stack.Screen name="settings" />
+            </Stack>
+          </View>
+        </AuthProvider>
+      </QueryClientProvider>
+    </SafeAreaProvider>
   );
 }

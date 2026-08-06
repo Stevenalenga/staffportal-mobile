@@ -17,6 +17,7 @@ import { z } from "zod";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const schema = z.object({
   email: z.string().email("Enter a valid email address"),
@@ -78,6 +79,7 @@ export default function LoginScreen() {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "left", "right"]}>
     <KeyboardAvoidingView
       className="flex-1 bg-white"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -87,7 +89,7 @@ export default function LoginScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Header */}
-        <View className="bg-emerald-700 px-6 pt-16 pb-10 items-center">
+        <View className="bg-emerald-700 px-6 pt-6 pb-10 items-center">
           <View className="bg-white rounded-2xl px-5 py-3 mb-4 shadow-sm">
             <Image
               source={require("../../assets/logo.webp")}
@@ -218,5 +220,6 @@ export default function LoginScreen() {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

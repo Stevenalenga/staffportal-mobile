@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: "Uthabiti Portal",
     slug: "staffportal-mobile",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     icon: "./assets/icon.png",
     scheme: "uthabitiportal",
@@ -21,6 +21,11 @@ module.exports = {
         monochromeImage: "./assets/android-icon-monochrome.png",
       },
       predictiveBackGestureEnabled: false,
+    },
+    androidStatusBar: {
+      barStyle: "dark-content",
+      backgroundColor: "#f9fafb",
+      translucent: false,
     },
     web: {
       favicon: "./assets/favicon.png",

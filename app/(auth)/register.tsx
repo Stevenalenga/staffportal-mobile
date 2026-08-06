@@ -22,6 +22,7 @@ import {
   fallbackRegisterDomains,
   type RegisterInput,
 } from "@/lib/auth-validation";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -73,6 +74,7 @@ export default function RegisterScreen() {
   };
 
   return (
+    <SafeAreaView className="flex-1 bg-white" edges={["top", "left", "right"]}>
     <KeyboardAvoidingView
       className="flex-1 bg-white"
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -81,7 +83,7 @@ export default function RegisterScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        <View className="bg-emerald-700 px-6 pt-14 pb-8 items-center">
+        <View className="bg-emerald-700 px-6 pt-6 pb-8 items-center">
           <View className="bg-white rounded-2xl px-5 py-3 mb-3 shadow-sm">
             <Image
               source={require("../../assets/logo.webp")}
@@ -244,5 +246,6 @@ export default function RegisterScreen() {
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
