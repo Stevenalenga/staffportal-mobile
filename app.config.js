@@ -2,18 +2,24 @@ module.exports = {
   expo: {
     name: "Uthabiti Portal",
     slug: "staffportal-mobile",
-    version: "1.0.1",
+    version: "1.0.2",
     orientation: "portrait",
     icon: "./assets/icon.png",
     scheme: "uthabitiportal",
     userInterfaceStyle: "light",
     newArchEnabled: true,
+    splash: {
+      image: "./assets/splash-icon.png",
+      resizeMode: "contain",
+      backgroundColor: "#047857",
+    },
     ios: {
       supportsTablet: true,
       bundleIdentifier: "org.uthabitiafrica.portal",
     },
     android: {
       package: "org.uthabitiafrica.portal",
+      versionCode: 2,
       adaptiveIcon: {
         backgroundColor: "#047857",
         foregroundImage: "./assets/android-icon-foreground.png",
@@ -32,6 +38,15 @@ module.exports = {
       bundler: "metro",
     },
     plugins: [
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/splash-icon.png",
+          imageWidth: 220,
+          resizeMode: "contain",
+          backgroundColor: "#047857",
+        },
+      ],
       "expo-router",
       "expo-status-bar",
       "expo-font",
