@@ -13,7 +13,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import { assetsApi, type Asset } from "@/lib/api";
+import { ApiErrorPanel } from "@/components/ApiErrorPanel";
+import { assetsApi, getApiErrorMessage, type Asset } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { canManageAssets } from "@/lib/portal-access";
 import {
@@ -180,7 +181,14 @@ export default function AssetRegisterScreen() {
   const [locationFilter, setLocationFilter] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
-  const { data: assets = [], isLoading, refetch, isRefetching } = useQuery({
+  const {
+    data: assets = [],
+    isLoading,
+    isError,
+    error,
+    refetch,
+    isRefetching,
+  } = useQuery({
     queryKey: ["assets"],
     queryFn: assetsApi.list,
   });
@@ -398,6 +406,11 @@ export default function AssetRegisterScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator size="large" color="#047857" />
         </View>
+      ) : isError ? (
+        <ApiErrorPanel
+          message={getApiErrorMessage(error, "Could not load assets from the portal.")}
+          onRetry={() => refetch()}
+        />
       ) : (
         <FlatList
           data={filtered}

@@ -437,13 +437,42 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
   if (axios.isAxiosError(error)) {
     const msg = error.response?.data as { error?: string } | undefined;
     if (msg?.error) return msg.error;
-    if (error.response?.status === 404) {
+    const status = error.response?.status;
+    if (status === 404) {
       return "This feature requires an updated portal server. Redeploy the web app and try again.";
+    }
+    if (status === 401) {
+      return "Your session expired. Sign out and sign in again.";
+    }
+    if (status === 500) {
+      return "Portal server error — the database may be offline. Contact IT or try again later.";
+    }
+    if (status === 503) {
+      return "Portal database is unreachable. Check the server DATABASE_URL and restart the web app.";
+    }
+    if (error.code === "ECONNABORTED") {
+      return "Request timed out. Check your internet connection.";
+    }
+    if (error.message === "Network Error") {
+      return "Cannot reach the portal server. Check Wi‑Fi or mobile data.";
     }
   }
   if (error instanceof Error && error.message) return error.message;
   return fallback;
 }
+
+export type MobileHealthStatus = {
+  ok: boolean;
+  database?: string;
+  error?: string;
+};
+
+export const healthApi = {
+  check: async () => {
+    const res = await api.get<MobileHealthStatus>("/health");
+    return res.data;
+  },
+};
 
 export const adminUsersApi = {
   list: fetchAdminUsers,
@@ -585,6 +614,9 @@ export const tasksApi = {
 export const assetsApi = {
   list: async () => {
     const res = await api.get<Asset[]>("/assets");
+    if (!Array.isArray(res.data)) {
+      throw new Error("Unexpected server response when loading assets.");
+    }
     return res.data;
   },
 };

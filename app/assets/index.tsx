@@ -3,7 +3,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
-import { assetsApi, dashboardApi } from "@/lib/api";
+import { ApiErrorPanel } from "@/components/ApiErrorPanel";
+import { assetsApi, dashboardApi, getApiErrorMessage } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import { canManageAssets } from "@/lib/portal-access";
 
@@ -42,16 +43,29 @@ export default function AssetsHubScreen() {
   const { user } = useAuth();
   const manager = canManageAssets(user?.role);
 
-  const { data: stats } = useQuery({
+  const {
+    data: stats,
+    isError: statsError,
+    error: statsErr,
+    refetch: refetchStats,
+  } = useQuery({
     queryKey: ["dashboard"],
     queryFn: dashboardApi.stats,
   });
 
-  const { data: myAssets = [] } = useQuery({
+  const {
+    data: myAssets = [],
+    isError: assetsError,
+    error: assetsErr,
+    refetch: refetchAssets,
+  } = useQuery({
     queryKey: ["assets"],
     queryFn: assetsApi.list,
     enabled: !manager,
   });
+
+  const loadError = manager ? statsError : assetsError || statsError;
+  const loadErrorObj = manager ? statsErr : assetsErr ?? statsErr;
 
   const assetTotal = manager ? stats?.totalAssets : myAssets.length;
   const assetAssigned = manager
@@ -78,6 +92,19 @@ export default function AssetsHubScreen() {
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ padding: 16 }}>
+        {loadError ? (
+          <ApiErrorPanel
+            message={getApiErrorMessage(
+              loadErrorObj,
+              "Could not load asset information from the portal."
+            )}
+            onRetry={() => {
+              refetchStats();
+              if (!manager) refetchAssets();
+            }}
+          />
+        ) : null}
+
         {(assetTotal !== undefined || assetAssigned !== undefined) && (
           <View className="bg-emerald-700 rounded-2xl p-5 mb-4 flex-row justify-between">
             <View>

@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: "Uthabiti Portal",
     slug: "staffportal-mobile",
-    version: "1.0.4",
+    version: "1.0.5",
     orientation: "portrait",
     icon: "./assets/icon.png",
     scheme: "uthabitiportal",
@@ -25,7 +25,7 @@ module.exports = {
     },
     android: {
       package: "org.uthabitiafrica.portal",
-      versionCode: 4,
+      versionCode: 5,
       adaptiveIcon: {
         backgroundColor: "#047857",
         foregroundImage: "./assets/android-icon-foreground.png",

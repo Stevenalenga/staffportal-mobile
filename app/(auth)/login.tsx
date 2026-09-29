@@ -57,7 +57,11 @@ export default function LoginScreen() {
         } else if (status === 403) {
           message = "Your account is inactive. Contact your IT Administrator.";
         } else if (status === 500) {
-          message = "Server error — please try again later.";
+          message =
+            "Portal server error — the database may be offline. Contact IT to check DATABASE_URL on the server.";
+        } else if (status === 503) {
+          message =
+            "Portal database is unreachable. The web app must be redeployed with a valid DATABASE_URL.";
         } else {
           message = `Unexpected error (HTTP ${status}).`;
         }
