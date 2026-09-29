@@ -79,6 +79,13 @@ export default function SettingsScreen() {
           color="#ecfdf5"
           onPress={() => router.push("/settings/account" as Href)}
         />
+        <SectionCard
+          icon="desktop-outline"
+          title="Screen sharing"
+          description="Grant permission to share your screen for IT support"
+          color="#fef3c7"
+          onPress={() => router.push("/settings/screen-share" as Href)}
+        />
 
         {adminHub && (
           <>

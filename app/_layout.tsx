@@ -16,6 +16,7 @@ import {
 } from "@expo-google-fonts/inter";
 import * as SplashScreen from "expo-splash-screen";
 import { AuthProvider } from "@/context/AuthContext";
+import { useAllowScreenCapture } from "@/lib/allow-screen-capture";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,6 +25,32 @@ const queryClient = new QueryClient({
     queries: { retry: 1, staleTime: 30_000 },
   },
 });
+
+function RootNavigation() {
+  useAllowScreenCapture();
+
+  return (
+    <View className="flex-1 bg-gray-50">
+      <StatusBar style="dark" />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: "#f9fafb" },
+        }}
+      >
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="assets" />
+        <Stack.Screen name="expenses" />
+        <Stack.Screen name="projects" />
+        <Stack.Screen name="departments" />
+        <Stack.Screen name="tasks" />
+        <Stack.Screen name="staff" />
+        <Stack.Screen name="settings" />
+      </Stack>
+    </View>
+  );
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -43,20 +70,7 @@ export default function RootLayout() {
     <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <View className="flex-1 bg-gray-50">
-            <StatusBar style="dark" />
-            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#f9fafb" } }}>
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="assets" />
-              <Stack.Screen name="expenses" />
-              <Stack.Screen name="projects" />
-              <Stack.Screen name="departments" />
-              <Stack.Screen name="tasks" />
-              <Stack.Screen name="staff" />
-              <Stack.Screen name="settings" />
-            </Stack>
-          </View>
+          <RootNavigation />
         </AuthProvider>
       </QueryClientProvider>
     </SafeAreaProvider>

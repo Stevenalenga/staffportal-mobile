@@ -12,6 +12,7 @@ export default function SettingsLayout() {
       <Stack.Screen name="account" />
       <Stack.Screen name="users" />
       <Stack.Screen name="workflow-roles" />
+      <Stack.Screen name="screen-share" />
     </Stack>
   );
 }

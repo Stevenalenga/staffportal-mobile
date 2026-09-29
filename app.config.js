@@ -2,7 +2,7 @@ module.exports = {
   expo: {
     name: "Uthabiti Portal",
     slug: "staffportal-mobile",
-    version: "1.0.2",
+    version: "1.0.4",
     orientation: "portrait",
     icon: "./assets/icon.png",
     scheme: "uthabitiportal",
@@ -16,10 +16,16 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: "org.uthabitiafrica.portal",
+      infoPlist: {
+        NSMicrophoneUsageDescription:
+          "Allow Uthabiti Portal to access your microphone for calls and screen sharing with audio.",
+        NSCameraUsageDescription:
+          "Allow Uthabiti Portal to access your camera for video support sessions.",
+      },
     },
     android: {
       package: "org.uthabitiafrica.portal",
-      versionCode: 2,
+      versionCode: 4,
       adaptiveIcon: {
         backgroundColor: "#047857",
         foregroundImage: "./assets/android-icon-foreground.png",
@@ -27,6 +33,11 @@ module.exports = {
         monochromeImage: "./assets/android-icon-monochrome.png",
       },
       predictiveBackGestureEnabled: false,
+      permissions: [
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION",
+        "android.permission.POST_NOTIFICATIONS",
+      ],
     },
     androidStatusBar: {
       barStyle: "dark-content",
@@ -47,6 +58,17 @@ module.exports = {
           backgroundColor: "#047857",
         },
       ],
+      [
+        "@config-plugins/react-native-webrtc",
+        {
+          cameraPermission:
+            "Allow Uthabiti Portal to access your camera for video support sessions.",
+          microphonePermission:
+            "Allow Uthabiti Portal to access your microphone for calls and screen sharing with audio.",
+        },
+      ],
+      "./plugins/withScreenSharePermissions.js",
+      "./plugins/withAllowScreenCapture.js",
       "expo-router",
       "expo-status-bar",
       "expo-font",
